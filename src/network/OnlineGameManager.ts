@@ -58,6 +58,7 @@ export class OnlineGameManager {
     this.opponentPlayerIdx = 2;
     this.onlinePhase = 'LOBBY';
     this.resetMatchData();
+    this.engine.setGameMode('ONLINE_DUEL');
     this.myAimAngle = -0.15; // default angle for P1
     console.log(`[OnlineGameManager] Initialized as Host for room ${code}`);
     if (this.onStateChanged) this.onStateChanged();
@@ -68,6 +69,7 @@ export class OnlineGameManager {
     this.opponentPlayerIdx = 1;
     this.onlinePhase = 'LOBBY';
     this.resetMatchData();
+    this.engine.setGameMode('ONLINE_DUEL');
     this.myAimAngle = Math.PI + 0.15; // default angle for P2
     if (this.onStateChanged) this.onStateChanged();
   }

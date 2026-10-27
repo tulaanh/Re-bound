@@ -219,10 +219,15 @@ export class UIManager {
 
   private updateModeUI(): void {
     const isBattle = this.engine.gameMode === 'BATTLE';
+    const isSandbox = this.engine.gameMode === 'SANDBOX';
+    const isOnline = this.engine.gameMode === 'ONLINE_DUEL';
+
     this.modeSelectBtn.innerHTML = isBattle
       ? '⚔️ Chế độ: <b>Đấu Sinh Tồn</b>'
-      : '🎯 Chế độ: <b>Sandbox Đối Kháng</b>';
-    this.modeSelectBtn.className = `btn-mode ${isBattle ? 'battle' : 'sandbox'}`;
+      : isSandbox
+      ? '🎯 Chế độ: <b>Sandbox Đối Kháng</b>'
+      : '🌐 Chế độ: <b>Đấu Online 1v1</b>';
+    this.modeSelectBtn.className = `btn-mode ${isBattle ? 'battle' : isSandbox ? 'sandbox' : 'online'}`;
 
     if (isBattle) {
       this.battleLeftContainer.classList.remove('hidden');
@@ -231,13 +236,20 @@ export class UIManager {
       this.p2Slot.setVisible(false);
       if (this.sandboxCanvasHint) this.sandboxCanvasHint.classList.add('hidden');
       this.resetBtn.classList.remove('hidden');
-    } else {
+    } else if (isSandbox) {
       this.battleLeftContainer.classList.add('hidden');
       this.battleRightContainer.classList.add('hidden');
       this.p1Slot.setVisible(true);
       this.p2Slot.setVisible(true);
       this.resetBtn.classList.add('hidden');
       this.updateSandboxUI();
+    } else if (isOnline) {
+      this.battleLeftContainer.classList.add('hidden');
+      this.battleRightContainer.classList.add('hidden');
+      this.p1Slot.setVisible(false);
+      this.p2Slot.setVisible(false);
+      if (this.sandboxCanvasHint) this.sandboxCanvasHint.classList.add('hidden');
+      this.resetBtn.classList.add('hidden');
     }
   }
 
@@ -249,6 +261,11 @@ export class UIManager {
     if (this.lastMode !== this.engine.gameMode) {
       this.lastMode = this.engine.gameMode;
       this.updateModeUI();
+    }
+
+    if (this.engine.gameMode === 'ONLINE_DUEL') {
+      // In Online mode, all HUD and modals are driven by OnlineUIManager
+      return;
     }
 
     const isBattle = this.engine.gameMode === 'BATTLE';

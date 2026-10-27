@@ -161,6 +161,14 @@ export class GameEngine {
       this.initSandboxDuel();
     } else if (mode === 'BATTLE') {
       this.resetMatch();
+    } else if (mode === 'ONLINE_DUEL') {
+      this.balls = [];
+      this.daggers = [];
+      this.thrownDaggers = [];
+      this.hazardManager.clear();
+      this.vfx.clear();
+      this.p1Ball = null;
+      this.p2Ball = null;
     }
 
     if (this.onUpdateUI) this.onUpdateUI();
@@ -692,6 +700,7 @@ export class GameEngine {
 
   public launchOnlineBattle(p1Angle: number, p2Angle: number) {
     if (!this.p1Ball || !this.p2Ball) return;
+    this.countdownTimer = 0;
     this.p1Ball.isAiming = false;
     this.p2Ball.isAiming = false;
 

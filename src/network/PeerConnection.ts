@@ -3,6 +3,22 @@ import type { NetworkMessage } from './NetworkMessages';
 
 const PEER_PREFIX = 'rebound-duel-';
 
+const PEER_CONFIG = {
+  debug: 1,
+  config: {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: 'stun:stun2.l.google.com:19302' },
+      { urls: 'stun:stun3.l.google.com:19302' },
+      { urls: 'stun:stun4.l.google.com:19302' },
+      { urls: 'stun:global.stun.twilio.com:3478' },
+      { urls: 'stun:stun.relay.metered.ca:80' },
+    ],
+    iceCandidatePoolSize: 10,
+  },
+};
+
 export class PeerConnection {
   private peer: Peer | null = null;
   private connection: DataConnection | null = null;
@@ -36,9 +52,7 @@ export class PeerConnection {
       this.isHost = true;
 
       const peerId = `${PEER_PREFIX}${code}`;
-      this.peer = new Peer(peerId, {
-        debug: 1,
-      });
+      this.peer = new Peer(peerId, PEER_CONFIG);
 
       this.peer.on('open', (id) => {
         console.log(`[P2P] Room created with ID: ${id} (Code: ${code})`);
@@ -65,13 +79,11 @@ export class PeerConnection {
   public joinRoom(code: string): Promise<void> {
     return new Promise((resolve, reject) => {
       this.disconnect();
-      const cleanCode = code.trim().toUpperCase();
+      const cleanCode = code.trim().toUpperCase().replace(/^RB-?/, '');
       this.roomCode = cleanCode;
       this.isHost = false;
 
-      this.peer = new Peer({
-        debug: 1,
-      });
+      this.peer = new Peer(PEER_CONFIG);
 
       this.peer.on('open', () => {
         const hostPeerId = `${PEER_PREFIX}${cleanCode}`;
