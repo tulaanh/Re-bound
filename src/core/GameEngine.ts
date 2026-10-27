@@ -860,6 +860,15 @@ export class GameEngine {
             soundFX.playCountdownBeep(true);
           }
         }
+
+        if (this.countdownTimer <= 0) {
+          this.countdownTimer = 0;
+          // Auto-launch battle locally if timer finishes
+          if (this.p1Ball && this.p2Ball && this.p1Ball.vx === 0 && this.p2Ball.vx === 0) {
+            this.launchOnlineBattle(this.p1Ball.aimAngle, this.p2Ball.aimAngle);
+          }
+        }
+
         if (this.onUpdateUI) this.onUpdateUI();
         return;
       }
@@ -871,8 +880,19 @@ export class GameEngine {
         return;
       }
 
-      // If Guest during battle, Host sends authoritative snapshots, Guest only renders VFX
+      // If Guest during battle, Host sends authoritative snapshots; Guest runs local motion prediction
       if (this.onlineLocalPlayerIdx === 2) {
+        const subDt = dt / this.subSteps;
+        for (let step = 0; step < this.subSteps; step++) {
+          this.box.update(subDt);
+          for (const b of this.balls) {
+            b.x += b.vx * subDt;
+            b.y += b.vy * subDt;
+            b.trail.push({ x: b.x, y: b.y });
+            if (b.trail.length > 18) b.trail.shift();
+            this.box.resolveBallCollision(b);
+          }
+        }
         this.vfx.update(dt);
         if (this.onUpdateUI) this.onUpdateUI();
         return;

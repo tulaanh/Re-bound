@@ -223,6 +223,14 @@ export class OnlineGameManager {
 
       case 'COMBAT_SNAPSHOT': {
         if (!this.isHost) {
+          if (this.onlinePhase !== 'BATTLE') {
+            console.log('[OnlineGameManager] Auto-advancing Guest to BATTLE from received snapshot');
+            this.onlinePhase = 'BATTLE';
+            this.engine.countdownTimer = 0;
+            if (this.engine.p1Ball) this.engine.p1Ball.isAiming = false;
+            if (this.engine.p2Ball) this.engine.p2Ball.isAiming = false;
+            if (this.onStateChanged) this.onStateChanged();
+          }
           this.applyCombatSnapshot(msg);
         }
         break;
@@ -508,17 +516,23 @@ export class OnlineGameManager {
 
     const p1 = this.engine.p1Ball;
     const p2 = this.engine.p2Ball;
+    const box = this.engine.box;
+    const boxSize = box.size > 0 ? box.size : 480;
 
     this.snapshotSeq++;
     peerConnection.send({
       type: 'COMBAT_SNAPSHOT',
       seq: this.snapshotSeq,
-      boxAngle: this.engine.box.angle,
+      boxAngle: box.angle,
       p1: {
         x: p1.x,
         y: p1.y,
+        nx: (p1.x - box.centerX) / boxSize,
+        ny: (p1.y - box.centerY) / boxSize,
         vx: p1.vx,
         vy: p1.vy,
+        nvx: p1.vx / boxSize,
+        nvy: p1.vy / boxSize,
         hp: p1.hp,
         maxHp: p1.maxHp,
         facingAngle: p1.facingAngle,
@@ -531,8 +545,12 @@ export class OnlineGameManager {
       p2: {
         x: p2.x,
         y: p2.y,
+        nx: (p2.x - box.centerX) / boxSize,
+        ny: (p2.y - box.centerY) / boxSize,
         vx: p2.vx,
         vy: p2.vy,
+        nvx: p2.vx / boxSize,
+        nvy: p2.vy / boxSize,
         hp: p2.hp,
         maxHp: p2.maxHp,
         facingAngle: p2.facingAngle,
@@ -555,12 +573,27 @@ export class OnlineGameManager {
 
     this.engine.box.angle = msg.boxAngle;
 
-    // Smoothly apply state
+    const box = this.engine.box;
+    const boxSize = box.size > 0 ? box.size : 480;
+
+    // Smoothly apply state using normalized coordinates
     const p1 = this.engine.p1Ball;
-    p1.x = msg.p1.x;
-    p1.y = msg.p1.y;
-    p1.vx = msg.p1.vx;
-    p1.vy = msg.p1.vy;
+    if (msg.p1.nx !== undefined && msg.p1.ny !== undefined) {
+      const targetX = box.centerX + msg.p1.nx * boxSize;
+      const targetY = box.centerY + msg.p1.ny * boxSize;
+      p1.x = p1.x + (targetX - p1.x) * 0.55;
+      p1.y = p1.y + (targetY - p1.y) * 0.55;
+      if (msg.p1.nvx !== undefined && msg.p1.nvy !== undefined) {
+        p1.vx = msg.p1.nvx * boxSize;
+        p1.vy = msg.p1.nvy * boxSize;
+      }
+    } else {
+      p1.x = msg.p1.x;
+      p1.y = msg.p1.y;
+      p1.vx = msg.p1.vx;
+      p1.vy = msg.p1.vy;
+    }
+
     p1.hp = msg.p1.hp;
     p1.facingAngle = msg.p1.facingAngle;
     p1.isSkillActive = msg.p1.isSkillActive;
@@ -570,10 +603,22 @@ export class OnlineGameManager {
     p1.bounces = msg.p1.bounces;
 
     const p2 = this.engine.p2Ball;
-    p2.x = msg.p2.x;
-    p2.y = msg.p2.y;
-    p2.vx = msg.p2.vx;
-    p2.vy = msg.p2.vy;
+    if (msg.p2.nx !== undefined && msg.p2.ny !== undefined) {
+      const targetX = box.centerX + msg.p2.nx * boxSize;
+      const targetY = box.centerY + msg.p2.ny * boxSize;
+      p2.x = p2.x + (targetX - p2.x) * 0.55;
+      p2.y = p2.y + (targetY - p2.y) * 0.55;
+      if (msg.p2.nvx !== undefined && msg.p2.nvy !== undefined) {
+        p2.vx = msg.p2.nvx * boxSize;
+        p2.vy = msg.p2.nvy * boxSize;
+      }
+    } else {
+      p2.x = msg.p2.x;
+      p2.y = msg.p2.y;
+      p2.vx = msg.p2.vx;
+      p2.vy = msg.p2.vy;
+    }
+
     p2.hp = msg.p2.hp;
     p2.facingAngle = msg.p2.facingAngle;
     p2.isSkillActive = msg.p2.isSkillActive;

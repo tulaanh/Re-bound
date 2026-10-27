@@ -25,8 +25,12 @@ export type NetworkMessage =
       p1: {
         x: number;
         y: number;
+        nx?: number;
+        ny?: number;
         vx: number;
         vy: number;
+        nvx?: number;
+        nvy?: number;
         hp: number;
         maxHp: number;
         facingAngle: number;
@@ -39,8 +43,12 @@ export type NetworkMessage =
       p2: {
         x: number;
         y: number;
+        nx?: number;
+        ny?: number;
         vx: number;
         vy: number;
+        nvx?: number;
+        nvy?: number;
         hp: number;
         maxHp: number;
         facingAngle: number;
