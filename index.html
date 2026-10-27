@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Re-Bound - Đấu Trường Bóng Nảy Trong Hộp Vuông</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="app">
+      <!-- Header Topbar -->
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-icon">💥</span>
+          <div class="brand-text">
+            <h1>RE-BOUND</h1>
+            <span class="sub">Đấu Trường Bóng Nảy Hộp Vuông</span>
+          </div>
+        </div>
+
+        <div class="top-controls">
+          <button id="btn-mode-toggle" class="btn-mode battle">
+            ⚔️ Chế độ: <b>Đấu Sinh Tồn</b>
+          </button>
+          <button id="btn-online-duel" class="btn-mode online" title="Đấu đối kháng online 1v1 P2P">
+            🌐 <b>Đấu Online 1v1</b>
+          </button>
+
+          <div class="control-group">
+            <button id="btn-pause" class="btn-ctrl" title="Tạm dừng hoặc tiếp tục">⏸️ Tạm Dừng</button>
+            <div class="select-wrapper">
+              <span>⚡</span>
+              <select id="select-speed" title="Tốc độ trận đấu">
+                <option value="0.5">0.5x</option>
+                <option value="1.0" selected>1.0x</option>
+                <option value="1.5">1.5x</option>
+                <option value="2.0">2.0x</option>
+                <option value="3.0">3.0x</option>
+              </select>
+            </div>
+            <button id="btn-rotate-box" class="btn-ctrl" title="Bật xoay hộp vuông tạo độ nảy xoáy">⏹️ Xoay Hộp: Tắt</button>
+            <button id="btn-reset" class="btn-ctrl btn-accent" title="Làm mới trận đấu">🔄 Đấu Lại</button>
+            <button id="btn-mute" class="btn-ctrl" title="Bật/Tắt âm thanh">🔊 Âm Thanh</button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Symmetrical 3-Column Game Area -->
+      <main class="game-layout">
+        <!-- ============================================== -->
+        <!-- LEFT PANEL: PLAYER 1 / BATTLE SPAWNER -->
+        <!-- ============================================== -->
+        <aside class="panel left-panel">
+          <!-- 1. Battle Mode Spawner (Active in Battle Mode) -->
+          <div id="battle-left-container">
+            <div class="panel-header">
+              <h3>🔮 Triệu Hồi Bóng Mới</h3>
+              <span class="hint">Bấm để thả thêm bóng vào hộp</span>
+            </div>
+            <div id="spawner-buttons" class="spawner-grid">
+              <!-- Dynamic Buttons from UIManager -->
+            </div>
+
+            <!-- Mechanics Reference Guide in Battle Mode -->
+            <div class="mechanics-guide">
+              <h4>📖 Cơ chế kỹ năng:</h4>
+              <ul>
+                <li><strong style="color: #ff6b35;">🔥 Hỏa Long:</strong> Công gốc 10, lướt 3.0x kéo dài 4.0s bùng nổ sát thương theo tốc độ (lên tới 58 ATK).</li>
+                <li><strong style="color: #38bdf8;">❄️ Băng Ngân:</strong> Tạo Vực Băng 5s: giảm 60% tốc, trừ 6 HP/s & 30% nguy cơ đóng băng cứng 0.7s.</li>
+                <li><strong style="color: #facc15;">⚡ Lôi Điệp:</strong> Nảy tường tăng +10% tốc (tối đa 2.2x). Rải đường sét 1.5s: chạm nổ 10 HP & dính Nhiễm Điện; nếu đang có ấn sét chạm tiếp sẽ nổ Quá Tải x3 (30 HP)!</li>
+                <li><strong style="color: #c084fc;">🌌 Hư Không:</strong> Tạo hố đen 150px duy trì 2.0s: Tiêu hủy toàn bộ bẫy sàn, đạn bay, tơ nhện và lập tức phân rã lính xương. Hút chặt kẻ địch chịu 12 HP/s; khi sụp đổ phát nổ 50 HP & xóa toàn bộ hồi chiêu đối thủ.</li>
+                <li><strong style="color: #34d399;">🧪 Độc Dược:</strong> Phóng 3 bãi độc rẽ quạt 4s: trong bãi trừ 7 HP/s; khi thoát ra ngấm độc 4s trừ 3 HP/s.</li>
+                <li><strong style="color: #f43f5e;">🧛 Huyết Dạ:</strong> Đâm nanh găm dính đối thủ 1s hút máu liên tục rồi mới nhả. Khi có Nộ (Cuồng Nộ) được hút vượt máu gốc (+50% Huyết Thuẫn), tăng 2.0x tốc & gây Chảy Máu!</li>
+                <li><strong style="color: #fb923c;">☄️ Thiên Thạch:</strong> Cứ mỗi 7 giây gọi mưa thiên thạch: 3 viên khi máu trên 30%, 4 viên khi máu ≤30%, 5 viên khi máu ≤5%. Mỗi viên gây 45 sát thương, bán kính nổ 50px. Né vòng cảnh báo màu cam!</li>
+                <li><strong style="color: #fbbf24;">🪓 Chiến Phủ:</strong> Rìu xoay quanh thân gây sát thương khi chạm đối thủ. Cứ mỗi 10 giây tự động xung phong lao nhanh về phía kẻ địch gần nhất.</li>
+                <li><strong style="color: #a855f7;">🧙‍♂️ Triệu Hồi Sư:</strong> Cứ mỗi 8 giây triệu hồi 3 lính xương (35 HP, 6 ATK) tồn tại vĩnh viễn đến khi bị hạ gục, tự động bẻ lái truy đuổi đối thủ. Khi Triệu Hồi Sư ngã xuống, lính xương tan biến.</li>
+                <li><strong style="color: #ef4444;">🕷️ Người Nhện:</strong> Mỗi lần chạm tường tạo 1 sợi tơ nối vĩnh viễn với bóng, kẻ địch chạm tơ chịu 12 HP/s. Kích hoạt (CD 10s): Trong 3s cường hóa toàn bộ mạng tơ lên 24 HP/s!</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- 2. Sandbox Player 1 Panel (Active in Sandbox Mode) -->
+          <div id="sandbox-p1-panel" class="sandbox-player-panel hidden">
+            <div class="panel-header p1-header">
+              <div class="player-title">
+                <span class="player-dot p1"></span>
+                <h3 id="p1-panel-title">ĐẤU SĨ 1 (BÊN TRÁI)</h3>
+              </div>
+              <span id="p1-status-badge" class="badge not-ready">🔴 Chưa sẵn sàng</span>
+            </div>
+
+            <!-- P1 Setup Section (Giai đoạn Chuẩn Bị: Chọn tướng & Căn góc tích hợp) -->
+            <div id="p1-setup-section" class="player-step-section">
+              <div class="hero-select-layout">
+                <div class="hero-selector">
+                  <span class="section-label">⚔️ Chọn Đấu Sĩ (16 Tướng)</span>
+                  <div id="p1-table-container" class="roster-table-wrapper"></div>
+                </div>
+                <div id="p1-hero-preview" class="hero-preview-box" aria-live="polite"></div>
+              </div>
+              
+              <div class="duel-slider-row">
+                <div class="slider-label">
+                  <span>🎯 Góc bắn xuất phát:</span>
+                  <strong id="p1-angle-val">0°</strong>
+                </div>
+                <input id="p1-angle-slider" type="range" min="0" max="360" value="0" class="angle-slider" />
+                <button id="btn-p1-random-angle" class="btn-random-angle" type="button">🎲 Random góc</button>
+                <div class="angle-presets">
+                  <button class="btn-preset" data-player="1" data-angle="0">0° ➡</button>
+                  <button class="btn-preset" data-player="1" data-angle="30">30° ↗</button>
+                  <button class="btn-preset" data-player="1" data-angle="330">330° ↘</button>
+                  <button class="btn-preset" data-player="1" data-angle="90">90° ⬇</button>
+                </div>
+              </div>
+
+              <button id="btn-p1-ready" class="btn-ready">
+                ✅ Xác Nhận Sẵn Sàng 1
+              </button>
+            </div>
+
+            <!-- P1 Live Battle HUD Section (Hiển thị trực tiếp khi trận đấu diễn ra) -->
+            <div id="p1-battle-section" class="battle-hud-section hidden">
+              <div id="p1-hud-hero-card" class="hud-hero-card"></div>
+
+              <!-- Live HP Bar -->
+              <div class="hud-bar-block">
+                <div class="hud-bar-label">
+                  <span>❤️ SINH LỰC</span>
+                  <strong id="p1-live-hp-text">120 / 120</strong>
+                </div>
+                <div class="hud-bar-track hp-track">
+                  <div id="p1-live-hp-bar" class="hud-bar-fill hp-fill" style="width: 100%;"></div>
+                </div>
+              </div>
+
+              <!-- Live Skill Cooldown Bar -->
+              <div class="hud-bar-block">
+                <div class="hud-bar-label">
+                  <span id="p1-live-skill-name">⚡ KỸ NĂNG</span>
+                  <strong id="p1-live-skill-status">Đang nạp...</strong>
+                </div>
+                <div class="hud-bar-track skill-track">
+                  <div id="p1-live-skill-bar" class="hud-bar-fill skill-fill" style="width: 0%;"></div>
+                </div>
+              </div>
+
+              <!-- Live Stats Grid -->
+              <div class="hud-stats-grid">
+                <div class="hud-stat-box">
+                  <span class="stat-icon">💥</span>
+                  <span class="stat-title">Sát Thương</span>
+                  <strong id="p1-live-dmg" class="stat-number">0</strong>
+                </div>
+                <div class="hud-stat-box">
+                  <span class="stat-icon">🔄</span>
+                  <span class="stat-title">Nảy Tường</span>
+                  <strong id="p1-live-bounces" class="stat-number">0</strong>
+                </div>
+                <div class="hud-stat-box">
+                  <span class="stat-icon">⚡</span>
+                  <span class="stat-title">Tốc Độ</span>
+                  <strong id="p1-live-speed" class="stat-number">190</strong>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="hud-actions-row">
+                <button id="btn-p1-reaim" class="btn-ctrl btn-hud">↺ Chỉnh Lại Góc</button>
+                <button id="btn-p1-rematch" class="btn-ctrl btn-accent btn-hud">⚡ Tái Đấu (Giữ Góc)</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Online Duel Player Panel -->
+          <div id="online-duel-panel" class="sandbox-player-panel hidden">
+            <div class="panel-header p1-header">
+              <div class="player-title">
+                <span class="player-dot p1"></span>
+                <h3 id="online-panel-title">BẠN (GÓC BẮN & HUD)</h3>
+              </div>
+              <span id="online-status-badge" class="badge not-ready">🔴 Chưa sẵn sàng</span>
+            </div>
+
+            <!-- Setup / Aiming Section -->
+            <div id="online-setup-section" class="player-step-section">
+              <div class="duel-slider-row">
+                <div class="slider-label">
+                  <span>🎯 Góc bắn bí mật của bạn:</span>
+                  <strong id="online-angle-val">0°</strong>
+                </div>
+                <input id="online-angle-slider" type="range" min="0" max="360" value="0" class="angle-slider" />
+                <button id="btn-online-random-angle" class="btn-random-angle" type="button">🎲 Random góc</button>
+                <div class="angle-presets">
+                  <button class="btn-preset btn-online-preset" data-angle="0">0° ➡</button>
+                  <button class="btn-preset btn-online-preset" data-angle="30">30° ↗</button>
+                  <button class="btn-preset btn-online-preset" data-angle="180">180° ⬅</button>
+                  <button class="btn-preset btn-online-preset" data-angle="210">210° ↙</button>
+                </div>
+              </div>
+
+              <button id="btn-online-ready" class="btn-ready">
+                ✅ Xác Nhận Sẵn Sàng
+              </button>
+            </div>
+
+            <!-- Live Combat Section -->
+            <div id="online-battle-section" class="battle-hud-section hidden">
+              <div id="online-hud-hero-card" class="hud-hero-card"></div>
+              <div class="hud-bar-block">
+                <div class="hud-bar-label">
+                  <span>❤️ SINH LỰC</span>
+                  <strong id="online-live-hp-text">120 / 120</strong>
+                </div>
+                <div class="hud-bar-track hp-track">
+                  <div id="online-live-hp-bar" class="hud-bar-fill hp-fill" style="width: 100%;"></div>
+                </div>
+              </div>
+
+              <div class="hud-bar-block">
+                <div class="hud-bar-label">
+                  <span id="online-live-skill-name">⚡ KỸ NĂNG</span>
+                  <strong id="online-live-skill-status">Đang nạp...</strong>
+                </div>
+                <div class="hud-bar-track skill-track">
+                  <div id="online-live-skill-bar" class="hud-bar-fill skill-fill" style="width: 0%;"></div>
+                </div>
+              </div>
+
+              <div class="hud-stats-grid">
+                <div class="hud-stat-box">
+                  <span class="stat-icon">💥</span>
+                  <span class="stat-title">Sát Thương</span>
+                  <strong id="online-live-dmg" class="stat-number">0</strong>
+                </div>
+                <div class="hud-stat-box">
+                  <span class="stat-icon">🔄</span>
+                  <span class="stat-title">Nảy Tường</span>
+                  <strong id="online-live-bounces" class="stat-number">0</strong>
+                </div>
+                <div class="hud-stat-box">
+                  <span class="stat-icon">⚡</span>
+                  <span class="stat-title">Tốc Độ</span>
+                  <strong id="online-live-speed" class="stat-number">190</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- ============================================== -->
+        <!-- CENTER VIEWPORT: CANVAS ARENA (100% CLEAN & SPACIOUS) -->
+        <!-- ============================================== -->
+        <section class="viewport-container">
+          <!-- Unobtrusive Canvas Guide Hint during Aiming -->
+          <div id="sandbox-canvas-hint" class="canvas-hint hidden">
+            🎯 Kéo chuột trên bóng để chỉnh hướng hoặc dùng thanh trượt 2 bên
+          </div>
+
+          <!-- P1 Hero Detail Side Tab (Flyout tab cạnh P1) -->
+          <aside id="p1-hero-side-tab" class="hero-side-tab p1-side hidden" aria-label="Hồ sơ chi tiết đấu sĩ 1"></aside>
+
+          <!-- P2 Hero Detail Side Tab (Flyout tab cạnh P2) -->
+          <aside id="p2-hero-side-tab" class="hero-side-tab p2-side hidden" aria-label="Hồ sơ chi tiết đấu sĩ 2"></aside>
+
+          <!-- Main Clean Canvas -->
+          <canvas id="game-canvas"></canvas>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- RIGHT PANEL: PLAYER 2 / BATTLE ROSTER -->
+        <!-- ============================================== -->
+        <aside class="panel right-panel">
+          <!-- 1. Battle Mode Live Roster (Active in Battle Mode) -->
+          <div id="battle-right-container">
+            <div class="panel-header">
+              <h3>📊 Đấu Sĩ Trên Sàn Đấu</h3>
+              <span class="hint">HP & Thời gian hồi chiêu</span>
+            </div>
+            <div id="roster-list" class="roster-container">
+              <!-- Dynamic Cards from UIManager -->
+            </div>
+          </div>
+
+          <!-- 2. Sandbox Player 2 Panel (Active in Sandbox Mode) -->
+          <div id="sandbox-p2-panel" class="sandbox-player-panel hidden">
+            <div class="panel-header p2-header">
+              <div class="player-title">
+                <span class="player-dot p2"></span>
+                <h3 id="p2-panel-title">ĐẤU SĨ 2 (BÊN PHẢI)</h3>
+              </div>
+              <span id="p2-status-badge" class="badge not-ready">🔴 Chưa sẵn sàng</span>
+            </div>
+
+            <!-- P2 Setup Section (Giai đoạn Chuẩn Bị: Chọn tướng & Căn góc tích hợp) -->
+            <div id="p2-setup-section" class="player-step-section">
+              <div class="hero-select-layout">
+                <div class="hero-selector">
+                  <span class="section-label">⚔️ Chọn Đấu Sĩ (16 Tướng)</span>
+                  <div id="p2-table-container" class="roster-table-wrapper"></div>
+                </div>
+                <div id="p2-hero-preview" class="hero-preview-box" aria-live="polite"></div>
+              </div>
+
+              <div class="duel-slider-row">
+                <div class="slider-label">
+                  <span>🎯 Góc bắn xuất phát:</span>
+                  <strong id="p2-angle-val">180°</strong>
+                </div>
+                <input id="p2-angle-slider" type="range" min="0" max="360" value="180" class="angle-slider" />
+                <button id="btn-p2-random-angle" class="btn-random-angle" type="button">🎲 Random góc</button>
+                <div class="angle-presets">
+                  <button class="btn-preset" data-player="2" data-angle="180">180° ⬅</button>
+                  <button class="btn-preset" data-player="2" data-angle="150">150° ↖</button>
+                  <button class="btn-preset" data-player="2" data-angle="210">210° ↙</button>
+                  <button class="btn-preset" data-player="2" data-angle="270">270° ⬆</button>
+                </div>
+              </div>
+
+              <button id="btn-p2-ready" class="btn-ready">
+                ✅ Xác Nhận Sẵn Sàng 2
+              </button>
+            </div>
+
+            <!-- P2 Live Battle HUD Section (Hiển thị trực tiếp khi trận đấu diễn ra) -->
+            <div id="p2-battle-section" class="battle-hud-section hidden">
+              <div id="p2-hud-hero-card" class="hud-hero-card"></div>
+
+              <!-- Live HP Bar -->
+              <div class="hud-bar-block">
+                <div class="hud-bar-label">
+                  <span>❤️ SINH LỰC</span>
+                  <strong id="p2-live-hp-text">110 / 110</strong>
+                </div>
+                <div class="hud-bar-track hp-track">
+                  <div id="p2-live-hp-bar" class="hud-bar-fill hp-fill" style="width: 100%;"></div>
+                </div>
+              </div>
+
+              <!-- Live Skill Cooldown Bar -->
+              <div class="hud-bar-block">
+                <div class="hud-bar-label">
+                  <span id="p2-live-skill-name">⚡ KỸ NĂNG</span>
+                  <strong id="p2-live-skill-status">Đang nạp...</strong>
+                </div>
+                <div class="hud-bar-track skill-track">
+                  <div id="p2-live-skill-bar" class="hud-bar-fill skill-fill" style="width: 0%;"></div>
+                </div>
+              </div>
+
+              <!-- Live Stats Grid -->
+              <div class="hud-stats-grid">
+                <div class="hud-stat-box">
+                  <span class="stat-icon">💥</span>
+                  <span class="stat-title">Sát Thương</span>
+                  <strong id="p2-live-dmg" class="stat-number">0</strong>
+                </div>
+                <div class="hud-stat-box">
+                  <span class="stat-icon">🔄</span>
+                  <span class="stat-title">Nảy Tường</span>
+                  <strong id="p2-live-bounces" class="stat-number">0</strong>
+                </div>
+                <div class="hud-stat-box">
+                  <span class="stat-icon">⚡</span>
+                  <span class="stat-title">Tốc Độ</span>
+                  <strong id="p2-live-speed" class="stat-number">190</strong>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="hud-actions-row">
+                <button id="btn-p2-reaim" class="btn-ctrl btn-hud">↺ Chỉnh Lại Góc</button>
+                <button id="btn-p2-rematch" class="btn-ctrl btn-accent btn-hud">⚡ Tái Đấu (Giữ Góc)</button>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </main>
+
+      <!-- Winner Modal Popup -->
+      <div id="winner-modal" class="modal-overlay hidden">
+        <div class="modal-box">
+          <div id="modal-trophy-banner" class="trophy-banner">👑 VÔ ĐỊCH 👑</div>
+          <div id="winner-text"></div>
+
+          <!-- Battle Mode Actions -->
+          <div id="battle-modal-actions" class="modal-actions">
+            <button id="btn-winner-again" class="btn-action">⚔️ Bắt Đầu Ván Mới</button>
+          </div>
+
+          <!-- Sandbox Mode Actions -->
+          <div id="sandbox-modal-actions" class="modal-actions sandbox-actions-grid hidden">
+            <button id="btn-modal-rematch" class="btn-action btn-accent">⚡ Tái Đấu (Giữ Nguyên Góc)</button>
+            <button id="btn-modal-reaim" class="btn-action btn-secondary">🎯 Mở Khóa & Chỉnh Lại Góc</button>
+            <button id="btn-modal-repick" class="btn-action btn-outline">👥 Chọn Lại Tướng Khác</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- ONLINE MULTIPLAYER MODALS -->
+      <!-- ============================================== -->
+
+      <!-- 1. Online Lobby Modal -->
+      <div id="online-lobby-modal" class="modal-overlay hidden">
+        <div class="modal-box lobby-box">
+          <div class="modal-header">
+            <h2>🌐 ĐẤU TRƯỜNG ONLINE 1VS1 (P2P)</h2>
+            <button id="btn-close-lobby" class="btn-close">✕</button>
+          </div>
+          <p class="modal-desc">Kết nối trực tiếp 2 máy qua WebRTC không cần server. Tạo phòng hoặc nhập mã phòng để bắt đầu!</p>
+
+          <div class="lobby-grid">
+            <div class="lobby-card">
+              <span class="lobby-card-icon">👑</span>
+              <h3>TẠO PHÒNG MỚI</h3>
+              <p>Trở thành Chủ phòng (P1 - Xanh), gửi link mời cho bạn bè.</p>
+              <button id="btn-create-room" class="btn-action btn-accent">⚡ Tạo Phòng Mới</button>
+              
+              <div id="host-room-info" class="host-info-block hidden">
+                <span class="code-label">MÃ PHÒNG:</span>
+                <div class="code-display" id="display-room-code">-----</div>
+                <button id="btn-copy-invite-link" class="btn-ctrl btn-hud">📋 Sao Chép Link Mời</button>
+              </div>
+            </div>
+
+            <div class="lobby-card">
+              <span class="lobby-card-icon">⚔️</span>
+              <h3>VÀO PHÒNG CÓ SẴN</h3>
+              <p>Nhập mã phòng 5 ký tự từ bạn bè để tham gia (P2 - Đỏ).</p>
+              <div class="join-input-group">
+                <input id="input-room-code" type="text" maxlength="6" placeholder="MÃ PHÒNG (VD: 8A2F)" class="room-input" />
+                <button id="btn-join-room" class="btn-action">Tham Gia</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="lobby-status-text" class="lobby-status">🔴 Chưa kết nối</div>
+        </div>
+      </div>
+
+      <!-- 2. Online Draft Pick Modal -->
+      <div id="online-draft-modal" class="modal-overlay hidden">
+        <div class="modal-box draft-box">
+          <div class="draft-header">
+            <h2>⚔️ CẤM CHỌN TƯỚNG (DRAFT PICK 3v3)</h2>
+            <div id="draft-turn-text" class="draft-turn-indicator">Đang khởi tạo lượt chọn...</div>
+          </div>
+
+          <div class="draft-layout">
+            <div class="draft-team-panel p1-team">
+              <h3>🔵 ĐẤU SĨ 1</h3>
+              <div id="draft-p1-slots" class="draft-slots-container"></div>
+            </div>
+
+            <div class="draft-pool-container">
+              <span class="pool-title">KHO 16 TƯỚNG ĐẤU TRƯỜNG</span>
+              <div id="draft-hero-grid" class="draft-grid"></div>
+            </div>
+
+            <div class="draft-team-panel p2-team">
+              <h3>🔴 ĐẤU SĨ 2</h3>
+              <div id="draft-p2-slots" class="draft-slots-container"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Online Select Round Hero (Vanguard / Counter-Pick) Modal -->
+      <div id="online-select-hero-modal" class="modal-overlay hidden">
+        <div class="modal-box select-round-box">
+          <h2 id="select-hero-title">⚔️ CHỌN ĐẤU SĨ TIÊN PHONG (HIỆP 1)</h2>
+          <div id="select-hero-subtitle" class="select-hero-sub"></div>
+          <div id="select-hero-roster" class="select-roster-grid"></div>
+        </div>
+      </div>
+
+      <!-- 4. Online Round Over Modal -->
+      <div id="online-round-over-modal" class="modal-overlay hidden">
+        <div class="modal-box round-over-box">
+          <h2 id="round-over-title">🏁 KẾT THÚC HIỆP ĐẤU</h2>
+          <div id="round-over-winner" class="round-over-winner-wrap"></div>
+          
+          <div class="rosters-summary">
+            <div class="roster-col">
+              <h4>🔵 Đội hình Đấu Sĩ 1</h4>
+              <div id="round-over-p1-roster" class="roster-pill-list"></div>
+            </div>
+            <div class="roster-col">
+              <h4>🔴 Đội hình Đấu Sĩ 2</h4>
+              <div id="round-over-p2-roster" class="roster-pill-list"></div>
+            </div>
+          </div>
+
+          <button id="btn-round-continue" class="btn-action btn-accent">⚡ Tiếp Tục Hiệp Tiếp Theo</button>
+        </div>
+      </div>
+
+      <!-- 5. Online Match Over Modal -->
+      <div id="online-match-over-modal" class="modal-overlay hidden">
+        <div class="modal-box match-over-box">
+          <div class="trophy-banner">👑 KẾT THÚC TOÀN TRẬN 👑</div>
+          <div id="match-over-winner"></div>
+          <div class="modal-actions">
+            <button id="btn-match-rematch" class="btn-action btn-accent">⚡ Tái Đấu</button>
+            <button id="btn-match-exit" class="btn-action btn-secondary">🚪 Rời Phòng</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
