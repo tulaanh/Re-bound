@@ -94,7 +94,7 @@ export class OnlineGameManager {
     });
 
     peerConnection.onConnect(() => {
-      console.log('[OnlineGameManager] Connected to opponent!');
+      console.log('[OnlineGameManager] Connected to opponent! isHost:', this.isHost);
       if (this.isHost) {
         // Host starts Draft Phase when Guest connects
         this.onlinePhase = 'DRAFT';
@@ -109,6 +109,12 @@ export class OnlineGameManager {
           turnIndex: 0,
         });
         if (this.onStateChanged) this.onStateChanged();
+      } else {
+        // Guest sends PEER_HELLO to trigger synchronization
+        peerConnection.send({
+          type: 'PEER_HELLO',
+          role: 'GUEST',
+        });
       }
     });
 
@@ -123,6 +129,22 @@ export class OnlineGameManager {
 
   public handleNetworkMessage(msg: NetworkMessage) {
     switch (msg.type) {
+      case 'PEER_HELLO': {
+        console.log('[OnlineGameManager] Host received PEER_HELLO from Guest');
+        if (this.isHost) {
+          this.onlinePhase = 'DRAFT';
+          peerConnection.send({
+            type: 'DRAFT_SYNC',
+            p1Draft: this.draftPicks.p1,
+            p2Draft: this.draftPicks.p2,
+            currentTurn: this.currentDraftTurn,
+            turnIndex: this.draftTurnIndex,
+          });
+          if (this.onStateChanged) this.onStateChanged();
+        }
+        break;
+      }
+
       case 'DRAFT_PICK': {
         this.applyDraftPick(msg.playerIdx, msg.heroId);
         break;

@@ -15,6 +15,7 @@ export class PeerConnection {
   private messageListeners: Array<(msg: NetworkMessage) => void> = [];
   private connectListeners: Array<() => void> = [];
   private disconnectListeners: Array<(reason: string) => void> = [];
+  private pendingSendQueue: NetworkMessage[] = [];
 
   constructor() {}
 
@@ -45,7 +46,7 @@ export class PeerConnection {
       });
 
       this.peer.on('connection', (conn) => {
-        console.log('[P2P] Guest connected to host!');
+        console.log('[P2P] Host received connection request from Guest. Waiting for DataChannel to open...');
         this.setupConnection(conn);
       });
 
@@ -79,9 +80,7 @@ export class PeerConnection {
           reliable: true,
         });
 
-        conn.on('open', () => {
-          console.log('[P2P] Connected to host successfully!');
-          this.setupConnection(conn);
+        this.setupConnection(conn, () => {
           resolve();
         });
 
@@ -105,9 +104,8 @@ export class PeerConnection {
     });
   }
 
-  private setupConnection(conn: DataConnection) {
+  private setupConnection(conn: DataConnection, onReadyCallback?: () => void) {
     this.connection = conn;
-    this.isConnected = true;
 
     conn.on('data', (data) => {
       const msg = data as NetworkMessage;
@@ -139,14 +137,41 @@ export class PeerConnection {
       this.handleDisconnect(`Lỗi kết nối: ${err.message || 'Mất kết nối'}`);
     });
 
-    this.startPingLoop();
+    const markConnectedAndNotify = () => {
+      if (this.isConnected) return;
+      this.isConnected = true;
+      console.log(`[P2P] DataConnection is now OPEN & READY! (isHost: ${this.isHost})`);
 
-    for (const listener of this.connectListeners) {
-      try {
-        listener();
-      } catch (e) {
-        console.error('[P2P] Connect listener error:', e);
+      // Flush any queued messages
+      while (this.pendingSendQueue.length > 0) {
+        const pending = this.pendingSendQueue.shift();
+        if (pending && this.connection && this.connection.open) {
+          console.log('[P2P] Flushing queued message:', pending.type);
+          this.connection.send(pending);
+        }
       }
+
+      this.startPingLoop();
+
+      if (onReadyCallback) {
+        onReadyCallback();
+      }
+
+      for (const listener of this.connectListeners) {
+        try {
+          listener();
+        } catch (e) {
+          console.error('[P2P] Connect listener error:', e);
+        }
+      }
+    };
+
+    if (conn.open) {
+      markConnectedAndNotify();
+    } else {
+      conn.on('open', () => {
+        markConnectedAndNotify();
+      });
     }
   }
 
@@ -169,6 +194,9 @@ export class PeerConnection {
   public send(msg: NetworkMessage) {
     if (this.connection && this.connection.open) {
       this.connection.send(msg);
+    } else {
+      console.warn('[P2P] Connection not fully open yet. Buffering message to queue:', msg.type);
+      this.pendingSendQueue.push(msg);
     }
   }
 
@@ -199,6 +227,7 @@ export class PeerConnection {
   public disconnect() {
     this.stopPingLoop();
     this.isConnected = false;
+    this.pendingSendQueue = [];
     if (this.connection) {
       try {
         this.connection.close();

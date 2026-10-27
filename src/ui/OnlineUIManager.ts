@@ -282,6 +282,8 @@ export class OnlineUIManager {
       await peerConnection.joinRoom(code);
       this.lobbyStatusText.innerText = `🟢 Kết nối thành công! Đang vào màn hình cấm chọn...`;
       soundFX.playWallBounce(2.0);
+      this.manager.onlinePhase = 'DRAFT';
+      this.syncUIWithOnlineState();
     } catch (err: any) {
       this.lobbyStatusText.innerText = `❌ Không thể tham gia: ${err.message || err}`;
       this.btnJoinRoom.disabled = false;
