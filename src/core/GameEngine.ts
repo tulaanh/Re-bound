@@ -44,7 +44,7 @@ export class GameEngine {
   public timeScale: number = 1.0;
   public winner: Ball | null = null;
   public isDraw: boolean = false;
-  private matchEndHandled: boolean = false;
+  public matchEndHandled: boolean = false;
 
   // Sandbox Duel state
   public sandboxPhase: SandboxPhase = 'SELECTING_BALLS';
@@ -888,10 +888,18 @@ export class GameEngine {
           for (const b of this.balls) {
             b.x += b.vx * subDt;
             b.y += b.vy * subDt;
-            b.trail.push({ x: b.x, y: b.y });
-            if (b.trail.length > 18) b.trail.shift();
+            if (Math.hypot(b.vx, b.vy) > 0.01) {
+              b.facingAngle = Math.atan2(b.vy, b.vx);
+            }
+            b.spinAngle += (b.vx + b.vy) * 0.01;
             this.box.resolveBallCollision(b);
+            b.skillStrategy.updateTick?.(b, subDt, this.balls, this.vfx, true);
           }
+          this.hazardManager.update(subDt, this.balls, this.vfx);
+        }
+        for (const b of this.balls) {
+          b.trail.unshift({ x: b.x, y: b.y });
+          if (b.trail.length > 12) b.trail.pop();
         }
         this.vfx.update(dt);
         if (this.onUpdateUI) this.onUpdateUI();

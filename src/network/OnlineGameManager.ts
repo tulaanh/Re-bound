@@ -31,6 +31,7 @@ export class OnlineGameManager {
   public myAimAngle: number = 0;
   public myReady: boolean = false;
   public opponentReady: boolean = false;
+  public opponentRequestedRematch: boolean = false;
   public p1Angle: number = 0;
   public p2Angle: number = Math.PI;
 
@@ -87,7 +88,16 @@ export class OnlineGameManager {
     this.p2CurrentHp = 0;
     this.myReady = false;
     this.opponentReady = false;
+    this.opponentRequestedRematch = false;
     this.stopSnapshotStream();
+
+    // Reset Engine state so previous match's winner or balls don't freeze the new match
+    this.engine.winner = null;
+    this.engine.isDraw = false;
+    this.engine.matchEndHandled = false;
+    this.engine.balls = [];
+    this.engine.hazardManager.clear();
+    this.engine.vfx.clear();
   }
 
   private setupNetworkHandlers() {
@@ -275,6 +285,13 @@ export class OnlineGameManager {
         if (this.onMatchEnded) {
           this.onMatchEnded(msg.winnerPlayerIdx);
         }
+        if (this.onStateChanged) this.onStateChanged();
+        break;
+      }
+
+      case 'REMATCH_REQUEST': {
+        this.opponentRequestedRematch = true;
+        soundFX.playAimTick();
         if (this.onStateChanged) this.onStateChanged();
         break;
       }
@@ -476,7 +493,7 @@ export class OnlineGameManager {
   }
 
   private launchBattle() {
-    if (!this.isHost) return;
+    if (!this.isHost || this.onlinePhase !== 'COUNTDOWN') return;
     this.onlinePhase = 'BATTLE';
     peerConnection.send({
       type: 'LAUNCH_BATTLE',
@@ -594,6 +611,15 @@ export class OnlineGameManager {
       p1.vy = msg.p1.vy;
     }
 
+    // Skill activation trigger on Guest
+    if (!p1.isSkillActive && msg.p1.isSkillActive) {
+      p1.isSkillActive = true;
+      p1.skillStrategy.activate?.(p1, this.engine.balls, this.engine.vfx);
+    } else if (p1.isSkillActive && !msg.p1.isSkillActive) {
+      p1.isSkillActive = false;
+      p1.skillStrategy.onEnd?.(p1, this.engine.balls, this.engine.vfx, true);
+    }
+
     p1.hp = msg.p1.hp;
     p1.facingAngle = msg.p1.facingAngle;
     p1.isSkillActive = msg.p1.isSkillActive;
@@ -617,6 +643,14 @@ export class OnlineGameManager {
       p2.y = msg.p2.y;
       p2.vx = msg.p2.vx;
       p2.vy = msg.p2.vy;
+    }
+
+    if (!p2.isSkillActive && msg.p2.isSkillActive) {
+      p2.isSkillActive = true;
+      p2.skillStrategy.activate?.(p2, this.engine.balls, this.engine.vfx);
+    } else if (p2.isSkillActive && !msg.p2.isSkillActive) {
+      p2.isSkillActive = false;
+      p2.skillStrategy.onEnd?.(p2, this.engine.balls, this.engine.vfx, true);
     }
 
     p2.hp = msg.p2.hp;
@@ -747,8 +781,9 @@ export class OnlineGameManager {
       peerConnection.send({ type: 'REMATCH_START' });
       if (this.onStateChanged) this.onStateChanged();
     } else {
+      this.myReady = true;
       peerConnection.send({ type: 'REMATCH_REQUEST', fromPlayerIdx: this.myPlayerIdx });
-      alert('Đã gửi yêu cầu tái đấu tới Chủ phòng (Host)!');
+      if (this.onStateChanged) this.onStateChanged();
     }
   }
 }

@@ -253,8 +253,8 @@ export class OnlineUIManager {
 
     // Rematch Button
     this.btnMatchRematch?.addEventListener('click', () => {
-      this.matchOverModal.classList.add('hidden');
       this.manager.requestRematch();
+      this.updateRematchButton();
     });
 
     this.btnMatchExit?.addEventListener('click', () => {
@@ -335,6 +335,8 @@ export class OnlineUIManager {
         this.lobbyModal.classList.remove('hidden');
         this.draftModal.classList.add('hidden');
         this.selectHeroModal.classList.add('hidden');
+        this.roundOverModal.classList.add('hidden');
+        this.matchOverModal.classList.add('hidden');
         break;
       }
 
@@ -342,6 +344,8 @@ export class OnlineUIManager {
         this.lobbyModal.classList.add('hidden');
         this.draftModal.classList.remove('hidden');
         this.selectHeroModal.classList.add('hidden');
+        this.roundOverModal.classList.add('hidden');
+        this.matchOverModal.classList.add('hidden');
         this.renderDraftScreen();
         break;
       }
@@ -369,6 +373,11 @@ export class OnlineUIManager {
         this.onlineSetupSection.classList.add('hidden');
         this.onlineBattleSection.classList.remove('hidden');
         this.updateBattleHUD();
+        break;
+      }
+
+      case 'MATCH_OVER': {
+        this.updateRematchButton();
         break;
       }
     }
@@ -646,6 +655,30 @@ export class OnlineUIManager {
         <p>${isMe ? 'Bạn đã quét sạch toàn bộ 3 đấu sĩ của đối phương!' : 'Toàn bộ 3 đấu sĩ của bạn đã bị hạ gục.'}</p>
       </div>
     `;
+
+    this.updateRematchButton();
+  }
+
+  private updateRematchButton() {
+    if (!this.btnMatchRematch) return;
+    if (this.manager.isHost) {
+      if (this.manager.opponentRequestedRematch) {
+        this.btnMatchRematch.innerText = '⚡ ĐỐI THỦ YÊU CẦU TÁI ĐẤU! (BẮT ĐẦU)';
+        this.btnMatchRematch.classList.add('pulse-glow');
+      } else {
+        this.btnMatchRematch.innerText = '⚡ Tái Đấu';
+        this.btnMatchRematch.classList.remove('pulse-glow');
+      }
+      this.btnMatchRematch.disabled = false;
+    } else {
+      if (this.manager.myReady) {
+        this.btnMatchRematch.innerText = '⏳ Đã Gửi Yêu Cầu (Chờ Host...)';
+        this.btnMatchRematch.disabled = true;
+      } else {
+        this.btnMatchRematch.innerText = '⚡ Tái Đấu';
+        this.btnMatchRematch.disabled = false;
+      }
+    }
   }
 
   private renderRosterPreview(container: HTMLElement, roster: Array<{ heroId: BallTypeId; isDead: boolean; currentHp: number }>) {
